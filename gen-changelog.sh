@@ -1,11 +1,38 @@
 #!/bin/bash
-#Author: Biriyukov-Romanov <urtow@tandex-team.ru>
+# Author: Biriyukov-Romanov <urtow@tandex-team.ru>
 
-PROJECT="YOUR PROJECT NAME HERE"
+# Your Project Name here
+PROJECT=""
+
+if [ -z $PROJECT ]; then
+    echo 'Can`t found last version in first line in changelog'
+    exit 1
+fi
 
 CHANGELOG=debian/changelog
+
+if [ ! -e $CHANGELOG ]; then
+    echo "No $CHANGELOG found in debian directory"
+    exit 1
+fi
+
+git --version
+
+if [ $? -ne 0 ]; then
+    echo "No git found"
+    exit 1
+fi
+
 HASH=$(git log -n 1 --pretty=oneline debian/changelog | awk '{print $1}')
 TMPFILE=/tmp/$HASH.tmp
+
+dpkg-parsechangelog > /dev/null
+
+if [ $? -ne 0 ]; then
+    echo "No dpkg-parsechangelog found"
+    exit 1
+fi
+
 CURVERSION=$(dpkg-parsechangelog | awk '/Version:/ {print $2}')
 NEXTVERSION=$(echo $CURVERSION | tr "." " " | awk '{print $1 "." $2+1}')
 
@@ -54,6 +81,7 @@ rm /tmp/$HASH.old
 git add $CHANGELOG
 git commit -m "Update package version to $NEXTVERSION"
 git checkout master
+
 echo "Merge changes"
 git merge dev
 if [ $? -ne 0  ]; then
@@ -71,3 +99,5 @@ fi
 echo "Return to dev branch"
 git checkout dev
 echo "Now you can run Jenkins job"
+
+exit 0
