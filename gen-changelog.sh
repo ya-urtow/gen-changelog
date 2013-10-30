@@ -6,7 +6,7 @@ PROJECT="YOUR PROJECT NAME HERE"
 CHANGELOG=debian/changelog
 HASH=$(git log -n 1 --pretty=oneline debian/changelog | awk '{print $1}')
 TMPFILE=/tmp/$HASH.tmp
-CURVERSION=$(head -1 debian/changelog | awk '{print $2}' | tr -d "(|)")
+CURVERSION=$(dpkg-parsechangelog | awk '/Version:/ {print $2}')
 NEXTVERSION=$(echo $CURVERSION | tr "." " " | awk '{print $1 "." $2+1}')
 
 HEAD="$PROJECT ($NEXTVERSION) stable; urgency=low"
